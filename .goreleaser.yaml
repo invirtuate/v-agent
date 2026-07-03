@@ -1,0 +1,30 @@
+version: 2
+
+before:
+  hooks:
+    - go mod download
+    - go generate ./...
+
+builds:
+  - id: v-agent
+    main: ./cmd/v-agent/main.go
+    binary: v-agent
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath #removes all file system paths from the compiled executable
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+  ids:
+    - v-agent
+
+release:
+  draft: false

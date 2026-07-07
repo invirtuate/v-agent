@@ -7,8 +7,8 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/ansrivas/fiberprometheus/v2"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
+	"github.com/nwcs-sh/fiberprometheus/v3"
 	"go.uber.org/zap"
 )
 
@@ -37,16 +37,13 @@ func NewProbesAPI(name, listen string, port uint) (*ProbesAPI, error) {
 
 	// Initialize engine
 	app := fiber.New(fiber.Config{
-		AppName:               name,
-		EnablePrintRoutes:     false,
-		Prefork:               false,
-		Concurrency:           50,
-		ServerHeader:          name,
-		ReadTimeout:           30 * time.Second,
-		WriteTimeout:          30 * time.Second,
-		IdleTimeout:           30 * time.Second,
-		DisableKeepalive:      true,
-		DisableStartupMessage: true,
+		AppName:          name,
+		Concurrency:      50,
+		ServerHeader:     name,
+		ReadTimeout:      30 * time.Second,
+		WriteTimeout:     30 * time.Second,
+		IdleTimeout:      30 * time.Second,
+		DisableKeepalive: true,
 	})
 
 	// health/ready checks
@@ -54,7 +51,7 @@ func NewProbesAPI(name, listen string, port uint) (*ProbesAPI, error) {
 	app.Get("/ready", p.GetReady)
 	app.Get("/heap", GetHeap)
 
-	prometheus := fiberprometheus.New(name)
+	prometheus := fiberprometheus.NewWithDefaultRegistry("probes")
 	prometheus.RegisterAt(app, "/metrics")
 	app.Use(prometheus.Middleware)
 
@@ -68,7 +65,11 @@ func NewProbesAPI(name, listen string, port uint) (*ProbesAPI, error) {
 
 // Start starts the server
 func (p *ProbesAPI) Start() error {
-	return p.app.Listen(fmt.Sprintf("%s:%d", p.Listen, p.Port))
+	return p.app.Listen(fmt.Sprintf("%s:%d", p.Listen, p.Port), fiber.ListenConfig{
+		EnablePrefork:         false,
+		DisableStartupMessage: true,
+		EnablePrintRoutes:     false,
+	})
 }
 
 // Shutdown shuts down the server
@@ -87,7 +88,7 @@ func (p *ProbesAPI) Failed() {
 }
 
 // GetHealthz responds to /healthz
-func (p *ProbesAPI) GetHealthz(c *fiber.Ctx) error {
+func (p *ProbesAPI) GetHealthz(c fiber.Ctx) error {
 	switch p.state {
 	case STATE_UNKNOWN:
 		c.Status(fiber.StatusContinue)
@@ -109,7 +110,7 @@ func (p *ProbesAPI) GetHealthz(c *fiber.Ctx) error {
 }
 
 // GetReady responds to /ready
-func (p *ProbesAPI) GetReady(c *fiber.Ctx) error {
+func (p *ProbesAPI) GetReady(c fiber.Ctx) error {
 	switch p.state {
 	case STATE_UNKNOWN:
 		c.Status(fiber.StatusContinue)
@@ -131,7 +132,7 @@ func (p *ProbesAPI) GetReady(c *fiber.Ctx) error {
 }
 
 // GetHeap responds to /heap dump requests
-func GetHeap(c *fiber.Ctx) error {
+func GetHeap(c fiber.Ctx) error {
 	log := zap.L().Sugar()
 
 	tmpfile, err := os.CreateTemp(".", "heap-profile-*.pprof")

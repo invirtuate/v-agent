@@ -126,19 +126,6 @@ type Resolver interface {
 
 // TCPDialer contains options to control a group of Dial calls.
 type TCPDialer struct {
-	// Concurrency controls the maximum number of concurrent Dials
-	// that can be performed using this object.
-	// Setting this to 0 means unlimited.
-	//
-	// WARNING: This can only be changed before the first Dial.
-	// Changes made after the first Dial will not affect anything.
-	Concurrency int
-
-	// LocalAddr is the local address to use when dialing an
-	// address.
-	// If nil, a local address is automatically chosen.
-	LocalAddr *net.TCPAddr
-
 	// This may be used to override DNS resolving policy, like this:
 	// var dialer = &fasthttp.TCPDialer{
 	// 	Resolver: &net.Resolver{
@@ -152,16 +139,31 @@ type TCPDialer struct {
 	// }
 	Resolver Resolver
 
-	// DisableDNSResolution may be used to disable DNS resolution
-	DisableDNSResolution bool
-	// DNSCacheDuration may be used to override the default DNS cache duration (DefaultDNSCacheDuration)
-	DNSCacheDuration time.Duration
-
-	tcpAddrsMap sync.Map
+	// LocalAddr is the local address to use when dialing an
+	// address.
+	// If nil, a local address is automatically chosen.
+	LocalAddr *net.TCPAddr
 
 	concurrencyCh chan struct{}
 
+	tcpAddrsMap    sync.Map
+	cleanerRunning atomic.Bool
+
+	// Concurrency controls the maximum number of concurrent Dials
+	// that can be performed using this object.
+	// Setting this to 0 means unlimited.
+	//
+	// WARNING: This can only be changed before the first Dial.
+	// Changes made after the first Dial will not affect anything.
+	Concurrency int
+
+	// DNSCacheDuration may be used to override the default DNS cache duration (DefaultDNSCacheDuration)
+	DNSCacheDuration time.Duration
+
 	once sync.Once
+
+	// DisableDNSResolution may be used to disable DNS resolution
+	DisableDNSResolution bool
 }
 
 // Dial dials the given TCP addr using tcp4.
@@ -270,6 +272,22 @@ func (d *TCPDialer) DialDualStackTimeout(addr string, timeout time.Duration) (ne
 	return d.dial(addr, true, timeout)
 }
 
+// FlushDNSCache clears all cached DNS entries, forcing fresh DNS lookups on subsequent dials.
+// This is useful when you want to ensure fresh DNS resolution, for example after network changes.
+func (d *TCPDialer) FlushDNSCache() {
+	d.tcpAddrsMap.Range(func(k, v any) bool {
+		d.tcpAddrsMap.Delete(k)
+		return true
+	})
+}
+
+// FlushDNSCache clears all cached DNS entries for the default dialer,
+// forcing fresh DNS lookups on subsequent Dial* calls.
+// This is useful when you want to ensure fresh DNS resolution, for example after network changes.
+func FlushDNSCache() {
+	defaultDialer.FlushDNSCache()
+}
+
 func (d *TCPDialer) dial(addr string, dualStack bool, timeout time.Duration) (net.Conn, error) {
 	d.once.Do(func() {
 		if d.Concurrency > 0 {
@@ -278,10 +296,6 @@ func (d *TCPDialer) dial(addr string, dualStack bool, timeout time.Duration) (ne
 
 		if d.DNSCacheDuration == 0 {
 			d.DNSCacheDuration = DefaultDNSCacheDuration
-		}
-
-		if !d.DisableDNSResolution {
-			go d.tcpAddrsClean()
 		}
 	})
 	deadline := time.Now().Add(timeout)
@@ -296,9 +310,10 @@ func (d *TCPDialer) dial(addr string, dualStack bool, timeout time.Duration) (ne
 	if err != nil {
 		return nil, err
 	}
+	d.startTCPAddrsClean()
 	var conn net.Conn
-	n := uint32(len(addrs))
-	for n > 0 {
+	n := uint32(len(addrs)) // #nosec G115
+	for range n {
 		conn, err = d.tryDial(network, addrs[idx%n].String(), deadline, d.concurrencyCh)
 		if err == nil {
 			return conn, nil
@@ -307,7 +322,6 @@ func (d *TCPDialer) dial(addr string, dualStack bool, timeout time.Duration) (ne
 			return nil, err
 		}
 		idx++
-		n--
 	}
 	return nil, err
 }
@@ -371,8 +385,8 @@ var ErrDialTimeout = errors.New("dialing to the given TCP address timed out")
 //		upstream = dialErr.Upstream // 34.206.39.153:80
 //	}
 type ErrDialWithUpstream struct {
-	Upstream string
 	wrapErr  error
+	Upstream string
 }
 
 func (e *ErrDialWithUpstream) Error() string {
@@ -395,28 +409,70 @@ func wrapDialWithUpstream(err error, upstream string) error {
 const DefaultDialTimeout = 3 * time.Second
 
 type tcpAddrEntry struct {
-	addrs    []net.TCPAddr
-	addrsIdx uint32
-
-	pending     int32
 	resolveTime time.Time
+	addrs       []net.TCPAddr
+	addrsIdx    uint32
+
+	pending int32
 }
 
 // DefaultDNSCacheDuration is the duration for caching resolved TCP addresses
 // by Dial* functions.
 const DefaultDNSCacheDuration = time.Minute
 
-func (d *TCPDialer) tcpAddrsClean() {
+// cleanExpiredDNSEntries removes expired DNS cache entries based on DNSCacheDuration.
+// This is the core cleanup logic used by both the background cleaner and manual cleanup.
+func (d *TCPDialer) cleanExpiredDNSEntries() bool {
 	expireDuration := 2 * d.DNSCacheDuration
-	for {
-		time.Sleep(time.Second)
-		t := time.Now()
-		d.tcpAddrsMap.Range(func(k, v any) bool {
-			if e, ok := v.(*tcpAddrEntry); ok && t.Sub(e.resolveTime) > expireDuration {
-				d.tcpAddrsMap.Delete(k)
+
+	t := time.Now()
+	hasEntries := false
+	d.tcpAddrsMap.Range(func(k, v any) bool {
+		if e, ok := v.(*tcpAddrEntry); ok && t.Sub(e.resolveTime) > expireDuration {
+			d.tcpAddrsMap.Delete(k)
+		} else {
+			hasEntries = true
+		}
+		return true
+	})
+	return hasEntries
+}
+
+func (d *TCPDialer) startTCPAddrsClean() {
+	if d.cleanerRunning.CompareAndSwap(false, true) {
+		go d.tcpAddrsClean()
+	}
+}
+
+func (d *TCPDialer) hasTCPAddrsEntries() bool {
+	hasEntries := false
+	d.tcpAddrsMap.Range(func(k, v any) bool {
+		hasEntries = true
+		return false
+	})
+	return hasEntries
+}
+
+var tcpAddrsCleanInterval = int64(time.Second)
+
+func (d *TCPDialer) tcpAddrsClean() {
+	t := time.NewTicker(time.Duration(atomic.LoadInt64(&tcpAddrsCleanInterval)))
+	defer t.Stop()
+
+	for range t.C {
+		if !d.cleanExpiredDNSEntries() {
+			d.cleanerRunning.Store(false)
+			// A dial may store a new DNS entry while cleanerRunning is still
+			// true and skip starting a cleaner. Reclaim ownership in that case.
+			if !d.hasTCPAddrsEntries() {
+				return
 			}
-			return true
-		})
+			if d.cleanerRunning.CompareAndSwap(false, true) {
+				continue
+			}
+			// Another dial already claimed ownership and started a cleaner.
+			return
+		}
 	}
 }
 
@@ -476,7 +532,7 @@ func resolveTCPAddrs(addr string, dualStack bool, resolver Resolver, deadline ti
 
 	n := len(ipaddrs)
 	addrs := make([]net.TCPAddr, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		ip := ipaddrs[i]
 		if !dualStack && ip.IP.To4() == nil {
 			continue

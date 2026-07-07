@@ -2,6 +2,8 @@ buf.build/gen/go/gogo/protobuf/protocolbuffers/go v1.36.11-20240617172848-e1dbca
 buf.build/gen/go/gogo/protobuf/protocolbuffers/go v1.36.11-20240617172848-e1dbca2775a7.1/go.mod h1:mwDA6SccUlW4ebUkJTpKoHZzCrLFh/WI48oQRvUTGAA=
 buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260331160422-eae785f0a21d.1 h1:OyFGRpH4F78kDv9OdkRyzfrBnnJO97nYCP5dIfkOzDk=
 buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260331160422-eae785f0a21d.1/go.mod h1:6rM4oiNLtvSABJBFC+GReCtGUaWLYwhsadnb9FgJ/2k=
+codeberg.org/invirtuate/fiberprometheus/v3 v3.0.0-20260707195331-4479ac011f8a h1:Rx8KEq30x22dWPD70PGNvGjlqa8Lyo/0Gdj97OpijRU=
+codeberg.org/invirtuate/fiberprometheus/v3 v3.0.0-20260707195331-4479ac011f8a/go.mod h1:yBKXasvCtriXho3C/iDM81S+uSYH/cUMZOwFFsaOWek=
 github.com/anatol/smart.go v0.0.0-20260702235216-5ed4e3b4d085 h1:8LOhnCDqzrcBr9E3kg4rXKLZzOCNoFxiIYNYU1rTRCY=
 github.com/anatol/smart.go v0.0.0-20260702235216-5ed4e3b4d085/go.mod h1:PrHdljtLe/VXVRH+zAJOcPjHkOHjF8/T2Arblruu/ac=
 github.com/anatol/vmtest v0.0.0-20260313235012-c2b0479898b4 h1:E9KSKETdT7YYxgOAWMRshWLoMF40nV53ZFTPskPXUTI=

@@ -5,7 +5,7 @@
 
 It acts like prometheus (scraping metrics), re-labeling metrics, then pushing them off to a remote_write compatible endpoint. Internally, we use mimir and write our metrics there but other implementations _should_ work.
 
-This is a modified version of `v-agent` that allows it to run anywhere.
+This is a modified version of `v-agent` that allows it to run anywhere removing the cloud providers "block".
 
 ### Metrics
 All metrics that are specifically created with `v-agent` are prefixed with `v_`. Scraped metrics are not modified other than the addition of labels.

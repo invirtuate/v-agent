@@ -5,7 +5,7 @@ go 1.26.4
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 require (
-	buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260331160422-eae785f0a21d.1
+	buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260707164124-2360da55afce.1
 	github.com/anatol/smart.go v0.0.0-20260702235216-5ed4e3b4d085
 	github.com/gofiber/fiber/v3 v3.4.0
 	github.com/golang/snappy v1.0.0

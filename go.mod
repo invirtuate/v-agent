@@ -5,16 +5,16 @@ go 1.26.4
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 require (
-	buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260331160422-eae785f0a21d.1
-	github.com/anatol/smart.go v0.0.0-20260702235216-5ed4e3b4d085
+	buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260707164124-2360da55afce.1
+	codeberg.org/invirtuate/fiberprometheus/v3 v3.0.0-20260707195331-4479ac011f8a
+	github.com/anatol/smart.go v0.0.0-20260706181715-5cd61760b880
 	github.com/gofiber/fiber/v3 v3.4.0
 	github.com/golang/snappy v1.0.0
-	github.com/nwcs-sh/fiberprometheus/v3 v3.0.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/client_model v0.6.2
-	github.com/prometheus/common v0.69.0
+	github.com/prometheus/common v0.70.0
 	go.uber.org/zap v1.28.0
-	golang.org/x/sync v0.21.0
+	golang.org/x/sync v0.22.0
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.36.2
@@ -24,7 +24,6 @@ require (
 
 require (
 	buf.build/gen/go/gogo/protobuf/protocolbuffers/go v1.36.11-20240617172848-e1dbca2775a7.1 // indirect
-	codeberg.org/invirtuate/fiberprometheus/v3 v3.0.0-20260707195331-4479ac011f8a // indirect
 	github.com/andybalholm/brotli v1.2.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -49,7 +48,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
-	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/prometheus/procfs v0.21.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

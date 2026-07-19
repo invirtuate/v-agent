@@ -7,8 +7,8 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"codeberg.org/invirtuate/fiberprometheus/v3"
 	"github.com/gofiber/fiber/v3"
-	"github.com/nwcs-sh/fiberprometheus/v3"
 	"go.uber.org/zap"
 )
 

@@ -1,10 +1,13 @@
 # buf.build/gen/go/gogo/protobuf/protocolbuffers/go v1.36.11-20240617172848-e1dbca2775a7.1
 ## explicit; go 1.23
 buf.build/gen/go/gogo/protobuf/protocolbuffers/go/gogoproto
-# buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260331160422-eae785f0a21d.1
+# buf.build/gen/go/prometheus/prometheus/protocolbuffers/go v1.36.11-20260707164124-2360da55afce.1
 ## explicit; go 1.23
 buf.build/gen/go/prometheus/prometheus/protocolbuffers/go
-# github.com/anatol/smart.go v0.0.0-20260702235216-5ed4e3b4d085
+# codeberg.org/invirtuate/fiberprometheus/v3 v3.0.0-20260707195331-4479ac011f8a
+## explicit; go 1.25.0
+codeberg.org/invirtuate/fiberprometheus/v3
+# github.com/anatol/smart.go v0.0.0-20260706181715-5cd61760b880
 ## explicit; go 1.26
 github.com/anatol/smart.go
 # github.com/andybalholm/brotli v1.2.2
@@ -113,9 +116,6 @@ github.com/modern-go/reflect2
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
-# github.com/nwcs-sh/fiberprometheus/v3 v3.0.0
-## explicit; go 1.25.0
-github.com/nwcs-sh/fiberprometheus/v3
 # github.com/philhofer/fwd v1.2.0
 ## explicit; go 1.20
 github.com/philhofer/fwd
@@ -131,12 +131,12 @@ github.com/prometheus/client_golang/prometheus/promhttp/internal
 # github.com/prometheus/client_model v0.6.2
 ## explicit; go 1.22.0
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.69.0
+# github.com/prometheus/common v0.70.0
 ## explicit; go 1.25.0
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/model
-# github.com/prometheus/procfs v0.16.1
-## explicit; go 1.23.0
+# github.com/prometheus/procfs v0.21.0
+## explicit; go 1.25.0
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
@@ -209,7 +209,7 @@ golang.org/x/net/internal/httpsfv
 ## explicit; go 1.25.0
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.21.0
+# golang.org/x/sync v0.22.0
 ## explicit; go 1.25.0
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.46.0
